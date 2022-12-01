@@ -5,7 +5,17 @@ import Document from '@tiptap/extension-document'
 import StarterKit from '@tiptap/starter-kit'
 import { EditorContent, useEditor } from '@tiptap/react'
 
-export function Editor() {
+export interface OnContentUpdatedParams {
+  title: string
+  content: string
+}
+
+interface EditorProps {
+  content: string
+  onContentUpdated: (params: OnContentUpdatedParams) => void
+}
+
+export function Editor({ content, onContentUpdated }: EditorProps) {
   const editor = useEditor({
     extensions: [
       Document.extend({
@@ -22,8 +32,16 @@ export function Editor() {
           'before:content-[attr(data-placeholder)] before:text-gray-500 before:h-0 before:float-left before:pointer-events-none',
       }),
     ],
-    content:
-      '<h1>Back-end</h1><p>Esse é o documento que explica sobre back-end</p>',
+    onUpdate: ({ editor }) => {
+      const contentRegex = /(<h1>(?<title>.+)<\/h1>(?<content>.+)?)/
+      const parsedContent = editor.getHTML().match(contentRegex)?.groups
+
+      const title = parsedContent?.title ?? 'Untitled'
+      const content = parsedContent?.content ?? ''
+
+      onContentUpdated({ title, content })
+    },
+    content,
     autofocus: 'end',
     editorProps: {
       attributes: {
